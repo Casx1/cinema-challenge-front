@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: '/api/v1', // This will be proxied to http://localhost:3000/api/v1 by Vite
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const V = axios.create({
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  // Add timeout to detect connection issues faster
   timeout: 10000,
 });
 
-// Debug interceptor to log requests
-api.interceptors.request.use(
+// Interceptor para log e autenticação
+V.interceptors.request.use(
   (config) => {
     console.log(`API Request: ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config);
     const token = localStorage.getItem('token');
@@ -26,22 +26,20 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling errors and logging
-api.interceptors.response.use(
+// Interceptor de resposta
+V.interceptors.response.use(
   (response) => {
     console.log(`API Response: ${response.status} for ${response.config.url}`, response.data);
     return response;
   },
   (error) => {
-    // Log detailed error information for debugging
     console.error('API Error:', {
       url: error.config?.url,
       status: error.response?.status,
       data: error.response?.data,
       message: error.message
     });
-    
-    // Handle 401 Unauthorized errors - redirect to login
+
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -51,4 +49,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export default V;
